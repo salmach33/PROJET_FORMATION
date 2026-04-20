@@ -12,46 +12,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Étape de diagnostic pour voir ce qui existe réellement sur le serveur
-      - name: Debug - List directory structure
-        run: ls -R
-
+      # --- PARTIE TESTS ET PREPARATION ---
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
           extensions: mbstring, xml, ctype, iconv, mysql
-          coverage: none
 
       - name: Install Backend dependencies
         working-directory: backend
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Copy .env
-        working-directory: backend
-        run: cp .env.example .env
-
-      - name: Generate key
-        working-directory: backend
-        run: php artisan key:generate
-
-      - name: Run PHP tests
-        working-directory: backend
-        run: php artisan test
+        run: |
+          composer install --no-interaction --prefer-dist
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # J'ai retiré les lignes de cache ici pour éviter l'erreur de chemin
 
-      - name: Install Frontend dependencies
-        # On entre dans le dossier manuellement pour être sûr
+      - name: Install and Build Frontend
         run: |
           cd frontend
           npm install
-
-      - name: Build frontend
-        run: |
-          cd frontend
           npm run build
+
+      # --- PARTIE DOCKER (AUTOMATISATION) ---
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Image
+        run: |
+          docker build -t mon-app-backend:latest ./backend
+
+      - name: Build Frontend Image
+        run: |
+          docker build -t mon-app-frontend:latest ./frontend
+
+      # Optionnel : Vérifier que tout démarre avec docker-compose
+      - name: Docker Compose Check
+        run: docker-compose up -d
