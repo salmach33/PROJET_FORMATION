@@ -33,8 +33,3 @@ jobs:
         working-directory: backend
         run: php artisan test
         
-      - name: Install frontend
-        working-directory: frontend
-        run: |
-        npm install
-        npm run build
