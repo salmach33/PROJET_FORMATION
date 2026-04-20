@@ -1,4 +1,4 @@
-name: Laravel CI
+name: Laravel CI/CD
 
 on:
   push:
@@ -12,12 +12,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Étape de diagnostic pour vérifier la structure réelle des dossiers
+      - name: Debug - List directory structure
+        run: ls -R
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
+          extensions: mbstring, xml, ctype, iconv, mysql
+          coverage: none
 
-      - name: Install dependencies
+      - name: Install Backend dependencies
         working-directory: backend
         run: composer install --no-interaction --prefer-dist
 
@@ -29,16 +35,18 @@ jobs:
         working-directory: backend
         run: php artisan key:generate
 
-      - name: Run tests
+      - name: Run PHP tests
         working-directory: backend
         run: php artisan test
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install Frontend dependencies
         working-directory: frontend
         run: npm install
 
