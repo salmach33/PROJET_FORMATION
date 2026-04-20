@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Étape de diagnostic pour vérifier la structure réelle des dossiers
+      # Étape de diagnostic pour voir ce qui existe réellement sur le serveur
       - name: Debug - List directory structure
         run: ls -R
 
@@ -43,11 +43,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          # J'ai retiré les lignes de cache ici pour éviter l'erreur de chemin
 
       - name: Install Frontend dependencies
-        working-directory: frontend
-        run: npm install
+        # On entre dans le dossier manuellement pour être sûr
+        run: |
+          cd frontend
+          npm install
 
       - name: Build frontend
-        working-directory: frontend
-        run: npm run build
+        run: |
+          cd frontend
+          npm run build
