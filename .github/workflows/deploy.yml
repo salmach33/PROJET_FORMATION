@@ -1,13 +1,16 @@
 name: Laravel CI
 
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -15,7 +18,23 @@ jobs:
           php-version: 8.2
 
       - name: Install dependencies
-        run: composer install
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Copy .env
+        working-directory: backend
+        run: cp .env.example .env
+
+      - name: Generate key
+        working-directory: backend
+        run: php artisan key:generate
 
       - name: Run tests
+        working-directory: backend
         run: php artisan test
+        
+      - name: Install frontend
+        working-directory: frontend
+        run: |
+        npm install
+        npm run build
