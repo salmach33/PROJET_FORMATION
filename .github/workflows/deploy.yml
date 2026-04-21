@@ -1,4 +1,4 @@
-name: Laravel React CI/CD
+name: Deploy without DockerHub
 
 on:
   push:
@@ -9,64 +9,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 2. Setup PHP (Backend)
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.2
-
-      - name: Install Backend dependencies
-        run: |
-          cd backend
-          composer install --no-interaction --prefer-dist
-          cp .env.example .env
-          php artisan key:generate
-
-      # 3. Setup Node (Frontend)
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install & Build Frontend
-        run: |
-          cd frontend
-          npm install
-          npm run build
-
-      # 4. Login DockerHub
-      - name: Login to DockerHub
-        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
-
-      # 5. Build Docker Images
-      - name: Build Docker Images
-        run: |
-          docker build -t ${{ secrets.DOCKER_USER }}/backend ./backend
-          docker build -t ${{ secrets.DOCKER_USER }}/frontend ./frontend
-
-      # 6. Push Docker Images
-      - name: Push Docker Images
-        run: |
-          docker push ${{ secrets.DOCKER_USER }}/backend
-          docker push ${{ secrets.DOCKER_USER }}/frontend
-
-      # 7. Deploy to VPS via SSH
-      - name: Deploy to Server
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
+            # aller dans dossier projet (ou clone si première fois)
             cd projet_formation || git clone https://github.com/${{ github.repository }} projet_formation
             cd projet_formation
 
+            # récupérer dernière version
             git pull origin main
 
+            # rebuild docker
             docker compose down
-            docker compose pull
-            docker compose up -d
+            docker compose up --build -d
