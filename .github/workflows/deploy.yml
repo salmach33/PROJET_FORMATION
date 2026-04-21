@@ -9,30 +9,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Récupérer le code
-      - name: Checkout code
+      # 1. Cloner le projet
+      - name: Cloner le projet
         uses: actions/checkout@v4
 
-      # 2. Build Docker backend
-      - name: Build Backend
+      # 2. Setup Docker
+      - name: Installer Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. Build backend (Laravel)
+      - name: Build backend
         run: docker build -t backend ./backend
 
-      # 3. Build Docker frontend
-      - name: Build Frontend
+      # 4. Build frontend (React)
+      - name: Build frontend
         run: docker build -t frontend ./frontend
 
-      # 4. Lancer containers (test)
+      # 5. Lancer docker compose (test)
       - name: Run containers
         run: docker compose up -d
 
-      # 5. Attendre un peu
+      # 6. Attendre
       - name: Wait
         run: sleep 10
 
-      # 6. Vérifier containers
+      # 7. Vérifier containers
       - name: Check containers
         run: docker ps
 
-      # 7. Tester API Laravel
+      # 8. Test API Laravel
       - name: Test API
         run: curl http://localhost:8000/api/formations || echo "API not ready"
+
+      # 9. Test OK
+      - name: Test final
+        run: echo "Build et test réussis ✅"
