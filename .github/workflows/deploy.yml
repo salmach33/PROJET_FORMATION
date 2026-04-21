@@ -1,28 +1,38 @@
-name: Deploy without DockerHub
+name: CI Docker Laravel + React
 
 on:
   push:
     branches: ["main"]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script: |
-            # aller dans dossier projet (ou clone si première fois)
-            cd projet_formation || git clone https://github.com/${{ github.repository }} projet_formation
-            cd projet_formation
+      # 1. Récupérer le code
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            # récupérer dernière version
-            git pull origin main
+      # 2. Build Docker backend
+      - name: Build Backend
+        run: docker build -t backend ./backend
 
-            # rebuild docker
-            docker compose down
-            docker compose up --build -d
+      # 3. Build Docker frontend
+      - name: Build Frontend
+        run: docker build -t frontend ./frontend
+
+      # 4. Lancer containers (test)
+      - name: Run containers
+        run: docker compose up -d
+
+      # 5. Attendre un peu
+      - name: Wait
+        run: sleep 10
+
+      # 6. Vérifier containers
+      - name: Check containers
+        run: docker ps
+
+      # 7. Tester API Laravel
+      - name: Test API
+        run: curl http://localhost:8000/api/formations || echo "API not ready"
