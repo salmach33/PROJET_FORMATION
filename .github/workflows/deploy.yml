@@ -37,13 +37,13 @@ jobs:
           npm install
           npm run build
 
-      # 3. Lancement Docker Compose
+
       - name: Build and Run Docker Containers
         run: |
           # On utilise "docker compose" (V2) qui est plus stable sur GitHub Actions
           docker compose up --build -d
 
-      # 4. Vérification du statut
+
       - name: Check Container Status
         run: |
           docker compose ps
