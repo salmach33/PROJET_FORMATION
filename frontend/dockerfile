@@ -1,22 +1,19 @@
-# Étape 1 : build de l'app
 FROM node:18
 
 WORKDIR /app
 
-# copier package.json
+
 COPY package*.json ./
 
-# installer dépendances
+
 RUN npm install
 
-# copier tout le projet
 COPY . .
 
-# build production (optionnel si tu veux prod)
 RUN npm run build
 
-# exposer port React
+
 EXPOSE 3000
 
-# lancer React en dev
+
 CMD ["npm", "start"]
