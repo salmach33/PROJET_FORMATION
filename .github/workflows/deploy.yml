@@ -20,6 +20,8 @@ jobs:
 
       - name: Build frontend
         run: docker build -t frontend ./frontend
-
+        
+      - name: Run docker compose
+        run: docker compose up -d
       - name: Test
         run: echo "Build réussi 🚀"
