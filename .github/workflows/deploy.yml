@@ -1,18 +1,19 @@
-name: Laravel CI/CD
+name: Laravel React CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Préparation Backend
+      # 2. Setup PHP (Backend)
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -25,7 +26,7 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      # 2. Préparation Frontend
+      # 3. Setup Node (Frontend)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -37,15 +38,35 @@ jobs:
           npm install
           npm run build
 
+      # 4. Login DockerHub
+      - name: Login to DockerHub
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
 
-      - name: Build and Run Docker Containers
+      # 5. Build Docker Images
+      - name: Build Docker Images
         run: |
-          # On utilise "docker compose" (V2) qui est plus stable sur GitHub Actions
-          docker compose up --build -d
+          docker build -t ${{ secrets.DOCKER_USER }}/backend ./backend
+          docker build -t ${{ secrets.DOCKER_USER }}/frontend ./frontend
 
-
-      - name: Check Container Status
+      # 6. Push Docker Images
+      - name: Push Docker Images
         run: |
-          docker compose ps
-          # On vérifie si les containers sont bien "Up"
-          docker compose logs --tail=20
+          docker push ${{ secrets.DOCKER_USER }}/backend
+          docker push ${{ secrets.DOCKER_USER }}/frontend
+
+      # 7. Deploy to VPS via SSH
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd projet_formation || git clone https://github.com/${{ github.repository }} projet_formation
+            cd projet_formation
+
+            git pull origin main
+
+            docker compose down
+            docker compose pull
+            docker compose up -d
