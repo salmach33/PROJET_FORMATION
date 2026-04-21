@@ -22,28 +22,4 @@ jobs:
         run: docker build -t frontend ./frontend
 
       - name: Test
-        run: echo "Build réussi 🚀"name: CI Docker Build
-
-on:
-  push:
-    branches: ["main"]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Cloner le projet
-        uses: actions/checkout@v4
-
-      - name: Installer Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build backend
-        run: docker build -t backend ./backend
-
-      - name: Build frontend
-        run: docker build -t frontend ./frontend
-
-      - name: Test
         run: echo "Build réussi 🚀"
